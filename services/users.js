@@ -1,5 +1,5 @@
-const { User } = require('../schemas/users');
 const jwt = require('jsonwebtoken');
+const { User } = require('../schemas/users');
 
 const registerUser = async ({ email, password }) => {
   const user = await User.findOne({ email });
