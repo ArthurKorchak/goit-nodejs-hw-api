@@ -1,4 +1,4 @@
-const { contactValidation } = require('../validation/contact.validation');
+const { contactValidation } = require('../validation/validations');
 const {
   getContacts,
   getContactById,
