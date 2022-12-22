@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
 const { User } = require('../schemas/users');
 
 const registerUser = async ({ email, password }) => { 
@@ -6,14 +7,16 @@ const registerUser = async ({ email, password }) => {
     const user = await User.findOne({ email });
 
     if (user) return { resp: undefined, err: "Email in use" };
+
+    const avatarURL = gravatar.url(email, { protocol: "http" });
     
-    const newUser = new User({ email, password: undefined });
+    const newUser = new User({ email, password: undefined, avatarURL });
 
     await newUser.codePassword(password);
 
     const body = await User.create(newUser);
 
-    return { resp: { user: { email: body.email, subscription: "starter" }}, err: false };
+    return { resp: { user: { email: body.email, subscription: "starter", avatarURL }}, err: false };
   } catch {
     return { resp: undefined, err: true };
   };
@@ -37,7 +40,8 @@ const loginUser = async ({ email, password }) => {
         user: {
           email: user.email,
           subscription: user.subscription
-        }
+        },
+        avatarURL: user.avatarURL
       },
       err: false
     };
