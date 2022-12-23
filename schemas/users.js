@@ -16,7 +16,8 @@ const userSchema = new Schema({
     enum: ["starter", "pro", "business"],
     default: "starter"
   },
-  token: String
+  token: String,
+  avatarURL: String,
 });
 
 userSchema.methods.codePassword = async function (password) {
