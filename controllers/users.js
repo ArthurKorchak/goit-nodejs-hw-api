@@ -4,6 +4,7 @@ const {
   loginUser,
   logoutUser,
   currentUser,
+  userAvatarUpdate,
 } = require('../services/users');
 
 
@@ -63,9 +64,18 @@ const userCurrentController = async ({ user }, res) => {
     : res.status(401).json({ message: "Not authorized" });
 };
 
+const userAvatarUpdateController = async ({ user, file }, res) => {
+  const avatarURL = await userAvatarUpdate(user.email, file);
+
+  avatarURL
+    ? res.status(200).json({ avatarURL })
+    : res.status(401).json({ message: "Not authorized" });
+};
+
 module.exports = {
   userRegisterController,
   userLoginController,
   userLogoutController,
   userCurrentController,
+  userAvatarUpdateController,
 };

@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
+const jimp = require('jimp');
+const { rename } = require('fs/promises');
+const { join } = require('path');
+
 const { User } = require('../schemas/users');
 
 const registerUser = async ({ email, password }) => { 
@@ -72,9 +76,30 @@ const currentUser = async (userId) => {
   };
 };
 
+const userAvatarUpdate = async (email, file) => {
+  try {
+    const image = await jimp.read(file.path);
+    const newName = `${email + '-' + file.originalname}`;
+    const newPath = join(__dirname, '../public/avatars', newName);
+    const avatarURL = `http://localhost:${process.env.PORT}/api/avatars/${newName}`;
+
+    image.resize(250, 250);
+    image.write(file.path);
+
+    await rename(file.path, newPath);
+
+    await User.findOneAndUpdate({ email }, { avatarURL })
+
+    return avatarURL;
+  } catch {
+    return false;
+  };
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   currentUser,
+  userAvatarUpdate,
 };
