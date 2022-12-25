@@ -1,6 +1,7 @@
 const { userCredentialsValidation } = require('../validation/validations');
 const {
   registerUser,
+  verificationUser,
   loginUser,
   logoutUser,
   currentUser,
@@ -24,6 +25,17 @@ const userRegisterController = async ({ body }, res) => {
         : res.status(400).json({ message: "Unexpected user creating error" });
     };
   };
+};
+
+const userVerificationController = async ({ params }, res) => {
+
+  const { verificationToken } = params;
+  
+  const verify = await verificationUser(verificationToken);
+  
+  verify.err
+    ? res.status(404).json({ message: "User not found" })
+    : res.status(200).json({ message: "Verification successful" }); 
 };
 
 const userLoginController = async ({ body }, res) => {
@@ -74,6 +86,7 @@ const userAvatarUpdateController = async ({ user, file }, res) => {
 
 module.exports = {
   userRegisterController,
+  userVerificationController,
   userLoginController,
   userLogoutController,
   userCurrentController,

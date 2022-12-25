@@ -16,6 +16,14 @@ const userSchema = new Schema({
     enum: ["starter", "pro", "business"],
     default: "starter"
   },
+  verify: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: {
+    type: String,
+    required: [true, 'Verify token is required'],
+  },
   token: String,
   avatarURL: String,
 });
@@ -29,6 +37,10 @@ userSchema.methods.codePassword = async function (password) {
 
 userSchema.methods.checkPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.checkVerify = async function (password) {
+  return this.verify;
 };
 
 const User = model('users', userSchema);

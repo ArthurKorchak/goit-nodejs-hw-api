@@ -1,10 +1,14 @@
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
 const jimp = require('jimp');
+const { v4: uuidv4 } = require('uuid');
 const { rename } = require('fs/promises');
 const { join } = require('path');
+const sgMail = require('@sendgrid/mail');
 
 const { User } = require('../schemas/users');
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const registerUser = async ({ email, password }) => { 
   try {
@@ -13,10 +17,21 @@ const registerUser = async ({ email, password }) => {
     if (user) return { resp: undefined, err: "Email in use" };
 
     const avatarURL = gravatar.url(email, { protocol: "http" });
+
+    const verificationToken = uuidv4();
     
-    const newUser = new User({ email, password: undefined, avatarURL });
+    const newUser = new User({ email, password: undefined, avatarURL, verificationToken });
 
     await newUser.codePassword(password);
+
+    const msg = {
+      to: email,
+      from: process.env.OUR_SERVICE_MAIL,
+      subject: 'Some service verification',
+      text: `Please, verify your account. Let's go this path: http://localhost:${process.env.PORT}/api/users/verify/${verificationToken}`,
+    };
+
+    await sgMail.send(msg);
 
     const body = await User.create(newUser);
 
@@ -26,13 +41,32 @@ const registerUser = async ({ email, password }) => {
   };
 };
 
+const verificationUser = async (verificationToken) => { 
+  try {
+    const user = await User.findOne({ verificationToken });
+
+    if (!user) return { err: true };
+    
+    await User.findOneAndUpdate({ email: user.email }, { verificationToken: null, verify: true });
+
+    return { err: false };
+  } catch {
+    return { err: true };
+  };
+};
+
 const loginUser = async ({ email, password }) => {
   try {
     const user = await User.findOne({ email });
     let isValidPassword = false;
+    let isUserVerify = false;
 
-    if (user) isValidPassword = await user.checkPassword(password);
+    if (user) {
+      isValidPassword = await user.checkPassword(password);
+      isUserVerify = await user.checkVerify();
+    };
     if (!isValidPassword) return { resp: undefined, err: "Email or password is wrong" };
+    if (!isUserVerify) return { resp: undefined, err: true };
     
     const jwtToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
 
@@ -88,7 +122,7 @@ const userAvatarUpdate = async (email, file) => {
 
     await rename(file.path, newPath);
 
-    await User.findOneAndUpdate({ email }, { avatarURL })
+    await User.findOneAndUpdate({ email }, { avatarURL });
 
     return avatarURL;
   } catch {
@@ -98,6 +132,7 @@ const userAvatarUpdate = async (email, file) => {
 
 module.exports = {
   registerUser,
+  verificationUser,
   loginUser,
   logoutUser,
   currentUser,

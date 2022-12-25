@@ -3,6 +3,7 @@ const multer = require('multer');
 const { tokenValidator } = require('../../validation/tokenValidator');
 const {
   userRegisterController,
+  userVerificationController,
   userLoginController,
   userLogoutController,
   userCurrentController,
@@ -24,6 +25,8 @@ const upload = multer({ storage: storage });
 
 router.post('/register', userRegisterController);
 
+router.get('/verify/:verificationToken', userVerificationController);
+
 router.get('/login', userLoginController);
 
 router.use(tokenValidator);
@@ -32,6 +35,6 @@ router.post('/logout', userLogoutController);
 
 router.get('/current', userCurrentController);
 
-router.patch('/avatars', upload.single('image'), userAvatarUpdateController)
+router.patch('/avatars', upload.single('image'), userAvatarUpdateController);
 
 module.exports = router;
