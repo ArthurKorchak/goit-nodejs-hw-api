@@ -46,8 +46,29 @@ const verificationUser = async (verificationToken) => {
     const user = await User.findOne({ verificationToken });
 
     if (!user) return { err: true };
-    
+
     await User.findOneAndUpdate({ email: user.email }, { verificationToken: null, verify: true });
+
+    return { err: false };
+  } catch {
+    return { err: true };
+  };
+};
+
+const reSendVerificationUser = async ({ email }) => { 
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || user.verify) return { err: true };
+
+    const msg = {
+      to: email,
+      from: process.env.OUR_SERVICE_MAIL,
+      subject: 'Some service verification',
+      text: `Please, verify your account. Let's go this path: http://localhost:${process.env.PORT}/api/users/verify/${user.verificationToken}`,
+    };
+
+    await sgMail.send(msg);
 
     return { err: false };
   } catch {
@@ -133,6 +154,7 @@ const userAvatarUpdate = async (email, file) => {
 module.exports = {
   registerUser,
   verificationUser,
+  reSendVerificationUser,
   loginUser,
   logoutUser,
   currentUser,

@@ -4,6 +4,7 @@ const { tokenValidator } = require('../../validation/tokenValidator');
 const {
   userRegisterController,
   userVerificationController,
+  userReSendVerificationController,
   userLoginController,
   userLogoutController,
   userCurrentController,
@@ -26,6 +27,8 @@ const upload = multer({ storage: storage });
 router.post('/register', userRegisterController);
 
 router.get('/verify/:verificationToken', userVerificationController);
+
+router.post('/verify', userReSendVerificationController);
 
 router.get('/login', userLoginController);
 
