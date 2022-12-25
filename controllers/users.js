@@ -1,6 +1,8 @@
 const { userCredentialsValidation } = require('../validation/validations');
 const {
   registerUser,
+  verificationUser,
+  reSendVerificationUser,
   loginUser,
   logoutUser,
   currentUser,
@@ -23,6 +25,27 @@ const userRegisterController = async ({ body }, res) => {
         ? res.status(409).json({ message: "Email in use" })
         : res.status(400).json({ message: "Unexpected user creating error" });
     };
+  };
+};
+
+const userVerificationController = async ({ params }, res) => {
+  const { verificationToken } = params;
+
+  const verify = await verificationUser(verificationToken);
+  
+  verify.err
+    ? res.status(404).json({ message: "User not found" })
+    : res.status(200).json({ message: "Verification successful" }); 
+};
+
+const userReSendVerificationController = async ({ body }, res) => {
+  if (!body.email) res.status(400).json({ message: "missing required field email" })
+  else {
+    const verify = await reSendVerificationUser(body);
+  
+    verify.err
+      ? res.status(400).json({ message: "Verification has already been passed" })
+      : res.status(200).json({ message: "Verification email sent" });
   };
 };
 
@@ -74,6 +97,8 @@ const userAvatarUpdateController = async ({ user, file }, res) => {
 
 module.exports = {
   userRegisterController,
+  userVerificationController,
+  userReSendVerificationController,
   userLoginController,
   userLogoutController,
   userCurrentController,
